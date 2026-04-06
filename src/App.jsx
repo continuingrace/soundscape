@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 // ── Spotify 설정 ──────────────────────────────────────────
 const SPOTIFY_CLIENT_ID = "4fe85a947063486c9b7944fa708ebc47";
-const SPOTIFY_REDIRECT_URI = "https://claude.ai/";
+const SPOTIFY_REDIRECT_URI = "https://songsoundscape.netlify.app";
 const SPOTIFY_SCOPES = "playlist-modify-private playlist-modify-public user-read-private";
 
 // ── 취향 프로필 ───────────────────────────────────────────
