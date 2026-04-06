@@ -1,3 +1,4 @@
+// updated
 import { useState, useEffect, useRef } from "react";
 
 const SPOTIFY_CLIENT_ID = "4fe85a947063486c9b7944fa708ebc47";
