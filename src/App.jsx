@@ -146,12 +146,10 @@ ${mood}${context ? `\n[추가 상황] ${context}` : ''}
 
 규칙: 트랙 8~10곡, 실제 존재하는 곡만, Spotify에서 검색 가능한 곡, reason은 따뜻하게`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/.netlify/functions/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
