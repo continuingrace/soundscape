@@ -505,7 +505,7 @@ export default function App() {
                     <span style={{ fontSize: '15px', color: G.text }}>{t.title}</span>
                     <span style={{ fontSize: '12px', color: G.muted, marginLeft: '5px' }}>— {t.artist}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '5px', flexShrink: 0, marginLeft: '8px' }}>
+                  <div style={{ display: 'flex', gap: '5px', flexShrink: 0, marginLeft: '8px', alignItems: 'center' }}>
                     <a href={getSpotifySearchUrl(t.artist, t.title)} target="_blank" rel="noopener noreferrer" className="sp-btn" style={{
                       fontSize: '10px', padding: '3px 8px', borderRadius: '20px',
                       border: '1px solid rgba(30,215,96,0.3)', color: G.sp,
@@ -516,6 +516,17 @@ export default function App() {
                       border: '1px solid rgba(255,68,68,0.3)', color: G.yt,
                       textDecoration: 'none', transition: 'all 0.2s', whiteSpace: 'nowrap',
                     }}>YT</a>
+                    <button onClick={() => setPlaylist(p => ({ ...p, tracks: p.tracks.filter((_, idx) => idx !== i) }))}
+                      style={{
+                        background: 'none', border: '1px solid rgba(196,164,120,0.2)',
+                        borderRadius: '50%', width: '22px', height: '22px',
+                        color: G.dim, cursor: 'pointer', fontSize: '12px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={e => { e.target.style.borderColor = '#c47a78'; e.target.style.color = '#c47a78'; }}
+                      onMouseLeave={e => { e.target.style.borderColor = 'rgba(196,164,120,0.2)'; e.target.style.color = G.dim; }}
+                    >✕</button>
                   </div>
                 </div>
                 <p style={{ fontSize: '12px', color: G.dim, lineHeight: 1.6, paddingLeft: '20px' }}>{t.reason}</p>
