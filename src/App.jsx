@@ -448,7 +448,21 @@ export default function App() {
         {screen === 'result' && playlist && (
           <div className="fu" style={{ paddingTop: '42px' }}>
             <p style={{ fontSize: '10px', letterSpacing: '0.3em', color: G.faint, marginBottom: '8px' }}>YOUR PLAYLIST</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(24px,5vw,34px)', fontWeight: 400, color: G.text, marginBottom: '6px', lineHeight: 1.3 }}>{playlist.title}</h2>
+            <input
+              value={playlist.title}
+              onChange={e => setPlaylist(p => ({ ...p, title: e.target.value }))}
+              style={{
+                fontFamily: "'Cormorant Garamond',serif",
+                fontSize: 'clamp(24px,5vw,34px)', fontWeight: 400,
+                color: G.text, marginBottom: '4px', lineHeight: 1.3,
+                background: 'none', border: 'none',
+                borderBottom: '1px solid rgba(196,164,120,0.3)',
+                width: '100%', padding: '4px 0', outline: 'none',
+              }}
+              onFocus={e => e.target.style.borderBottomColor = 'rgba(196,164,120,0.8)'}
+              onBlur={e => e.target.style.borderBottomColor = 'rgba(196,164,120,0.3)'}
+            />
+            <p style={{ fontSize: '11px', color: G.faint, marginBottom: '8px' }}>✎ 제목을 수정할 수 있어요</p>
             <p style={{ color: G.dim, fontSize: '13px', marginBottom: '28px', lineHeight: 1.7 }}>{playlist.description}</p>
 
             {spToken ? (
