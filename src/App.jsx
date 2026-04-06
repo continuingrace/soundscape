@@ -149,6 +149,7 @@ ${mood}${context ? `\n[추가 상황] ${context}` : ''}
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
