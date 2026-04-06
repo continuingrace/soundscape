@@ -137,7 +137,13 @@ ${mood}${context ? `\n[추가 상황] ${context}` : ''}
 다음 JSON 형식으로만 답하세요. 마크다운 코드블록 없이 순수 JSON만:
 {"title":"플레이리스트 제목 (감성적인 한국어)","description":"한 줄 설명","tracks":[{"title":"곡명","artist":"아티스트명","reason":"이 곡을 고른 이유 한 문장"}]}
 
-규칙: 트랙 8~10곡, 실제 존재하는 곡만, Spotify에서 검색 가능한 곡, reason은 따뜻하게`;
+규칙:
+- 트랙 8~10곡
+- 반드시 Spotify와 YouTube에서 실제로 검색 가능한 곡만 추천
+- 곡명과 아티스트명은 정확한 공식 표기를 사용 (예: "주님의 기도" by 옹기장이 같은 경우 Spotify에 없으면 추천하지 말 것)
+- 한국 CCM은 멜론/지니에는 있어도 Spotify에 없는 경우가 많으니 주의
+- 국내 CCM 추천 시 Spotify에 확실히 있는 아티스트만 (예: 마커스워십, 어노인팅, 소울다임 등)
+- reason은 따뜻하게 한 문장으로`;
 
   const res = await fetch('/.netlify/functions/chat', {
     method: 'POST',
