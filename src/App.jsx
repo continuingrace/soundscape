@@ -97,38 +97,31 @@ async function getValidToken() {
 }
 
 // ── Spotify API ───────────────────────────────────────────
+async function spotifyApi(action, token, params = {}) {
+  const res = await fetch('/.netlify/functions/spotify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, token, ...params }),
+  });
+  return await res.json();
+}
+
 async function spotifySearch(token, query) {
-  const res = await fetch(
-    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  const data = await res.json();
+  const data = await spotifyApi('search', token, { query });
   return data.tracks?.items?.[0]?.uri || null;
 }
 
 async function createSpotifyPlaylist(token, userId, title, description) {
-  const res = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: title, description, public: false }),
-  });
-  const data = await res.json();
+  const data = await spotifyApi('createPlaylist', token, { userId, title, description });
   return data.id;
 }
 
 async function addTracksToPlaylist(token, playlistId, uris) {
-  await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ uris }),
-  });
+  await spotifyApi('addTracks', token, { playlistId, uris });
 }
 
 async function getSpotifyUser(token) {
-  const res = await fetch('https://api.spotify.com/v1/me', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return await res.json();
+  return await spotifyApi('getUser', token);
 }
 
 // ── Claude AI 추천 ────────────────────────────────────────
