@@ -4,11 +4,51 @@ import { useState, useEffect, useRef } from "react";
 const SPOTIFY_CLIENT_ID = "4fe85a947063486c9b7944fa708ebc47";
 const SPOTIFY_REDIRECT_URI = "https://songsoundscape.netlify.app";
 const SPOTIFY_SCOPES = "playlist-modify-private playlist-modify-public user-read-private";
+const GOOGLE_CLIENT_ID = "261872841005-e6458onccnor8d5l9s39ct2ljilaeotf.apps.googleusercontent.com";
+const YOUTUBE_SCOPES = "https://www.googleapis.com/auth/youtube";
+
+const GOOGLE_CLIENT_ID = '261872841005-e6458onccnor8d5l9s39ct2ljilaeotf.apps.googleusercontent.com';
 
 const DEFAULT_PROFILE = `- CCM: 해외(Hillsong, Elevation, Chris Tomlin 등) + 국내 CCM, 상황에 따라 워십/잔잔한 것 모두
 - 영화음악: 잔잔하고 밝은 계열, 너무 어둡거나 극적이지 않은 것
 - 클래식: 드뷔시, 브람스, 차이코프스키, 라흐마니노프 / 백건우·조성진 같은 피아노 중심
 - 공통 분위기: 선율이 아름답고, 감성적이지만 무겁지 않음. 영적이거나 서정적인 분위기`;
+
+// ── YouTube Auth ────────────────────────────────────────
+function getYouTubeAuthUrl() {
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: "https://songsoundscape.netlify.app",
+    response_type: "token",
+    scope: YOUTUBE_SCOPES,
+    include_granted_scopes: "true",
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
+
+function parseYouTubeToken() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const token = params.get("access_token");
+  const state = params.get("state");
+  if (token && state === "youtube") {
+    const expiry = Date.now() + parseInt(params.get("expires_in") || "3600") * 1000;
+    localStorage.setItem("yt_token", token);
+    localStorage.setItem("yt_expiry", expiry);
+    window.history.replaceState({}, "", window.location.pathname);
+    return token;
+  }
+  return null;
+}
+
+function getStoredYTToken() {
+  const token = localStorage.getItem("yt_token");
+  const expiry = localStorage.getItem("yt_expiry");
+  if (token && expiry && Date.now() < parseInt(expiry) - 60000) return token;
+  localStorage.removeItem("yt_token");
+  localStorage.removeItem("yt_expiry");
+  return null;
+}
 
 // ── PKCE 헬퍼 ────────────────────────────────────────────
 function generateRandomString(length) {
@@ -169,6 +209,41 @@ function getSpotifySearchUrl(artist, title) {
   return `https://open.spotify.com/search/${encodeURIComponent(artist + ' ' + title)}`;
 }
 
+// ── YouTube OAuth ────────────────────────────────────────
+function getYouTubeAuthUrl() {
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: 'https://songsoundscape.netlify.app',
+    response_type: 'token',
+    scope: 'https://www.googleapis.com/auth/youtube',
+    include_granted_scopes: 'true',
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
+
+function parseYouTubeToken() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const token = params.get('access_token');
+  const expiresIn = params.get('expires_in');
+  if (token) {
+    localStorage.setItem('yt_token', token);
+    localStorage.setItem('yt_expiry', Date.now() + parseInt(expiresIn) * 1000);
+    window.history.replaceState({}, '', window.location.pathname);
+    return token;
+  }
+  return null;
+}
+
+function getStoredYTToken() {
+  const token = localStorage.getItem('yt_token');
+  const expiry = localStorage.getItem('yt_expiry');
+  if (token && expiry && Date.now() < parseInt(expiry)) return token;
+  localStorage.removeItem('yt_token');
+  localStorage.removeItem('yt_expiry');
+  return null;
+}
+
 // ── 메인 앱 ──────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState('home');
@@ -184,10 +259,20 @@ export default function App() {
   const [saveMsg, setSaveMsg] = useState('');
   const [history, setHistory] = useState([]);
   const [profileSaved, setProfileSaved] = useState('');
+  const [ytToken, setYtToken] = useState(null);
+  const [ytSaving, setYtSaving] = useState(false);
+  const [ytSaveMsg, setYtSaveMsg] = useState('');
   const moodRef = useRef(null);
 
   useEffect(() => {
     const init = async () => {
+      // YouTube token parse
+      const ytTok = parseYouTubeToken();
+      if (ytTok) setYtToken(ytTok);
+      else {
+        const stored = getStoredYTToken();
+        if (stored) setYtToken(stored);
+      }
       // URL에 code가 있으면 토큰 교환
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
@@ -207,6 +292,11 @@ export default function App() {
           getSpotifyUser(token).then(u => setSpUser(u)).catch(() => {});
         }
       }
+      // YouTube 토큰 확인
+      const newYtToken = parseYouTubeToken();
+      const ytStored = getStoredYTToken();
+      if (newYtToken || ytStored) setYtToken(newYtToken || ytStored);
+
       const h = localStorage.getItem('pl_history');
       if (h) setHistory(JSON.parse(h));
       const p = localStorage.getItem('pl_profile');
@@ -246,6 +336,60 @@ export default function App() {
     setLoading(false);
   };
 
+  const loginYouTube = () => {
+    window.location.href = getYouTubeAuthUrl();
+  };
+
+  const logoutYouTube = () => {
+    localStorage.removeItem('yt_token');
+    localStorage.removeItem('yt_expiry');
+    setYtToken(null);
+  };
+
+  const saveToYouTube = async () => {
+    if (!playlist || !ytToken) return;
+    setYtSaving(true); setYtSaveMsg('');
+    try {
+      // 1. 플레이리스트 생성
+      const plRes = await fetch('https://www.googleapis.com/youtube/v3/playlists?part=snippet,status', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${ytToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          snippet: { title: playlist.title, description: playlist.description },
+          status: { privacyStatus: 'private' },
+        }),
+      });
+      const plData = await plRes.json();
+      if (!plData.id) throw new Error('플레이리스트 생성 실패');
+      const playlistId = plData.id;
+
+      // 2. 각 곡 검색 후 추가
+      let added = 0;
+      for (const t of playlist.tracks) {
+        const searchRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(t.title + ' ' + t.artist)}&type=video&maxResults=1`,
+          { headers: { Authorization: `Bearer ${ytToken}` } }
+        );
+        const searchData = await searchRes.json();
+        const videoId = searchData.items?.[0]?.id?.videoId;
+        if (videoId) {
+          await fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${ytToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              snippet: { playlistId, resourceId: { kind: 'youtube#video', videoId } },
+            }),
+          });
+          added++;
+        }
+      }
+      setYtSaveMsg(`✓ YouTube에 저장됐어요! (${added}곡)`);
+    } catch (e) {
+      setYtSaveMsg('저장 실패. 다시 시도해주세요.');
+    }
+    setYtSaving(false);
+  };
+
   const saveToSpotify = async () => {
     if (!playlist) return;
     setSaving(true); setSaveMsg('');
@@ -267,6 +411,64 @@ export default function App() {
       setSaveMsg('저장 실패. 다시 시도해주세요.');
     }
     setSaving(false);
+  };
+
+  const loginYouTube = () => {
+    const url = getYouTubeAuthUrl() + "&state=youtube";
+    window.location.href = url;
+  };
+
+  const logoutYouTube = () => {
+    localStorage.removeItem("yt_token");
+    localStorage.removeItem("yt_expiry");
+    setYtToken(null);
+  };
+
+  const saveToYouTube = async () => {
+    if (!ytToken || !playlist) return;
+    setYtSaving(true); setYtSaveMsg('');
+    try {
+      // 1. 플레이리스트 생성
+      const createRes = await fetch('https://www.googleapis.com/youtube/v3/playlists?part=snippet,status', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${ytToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          snippet: { title: playlist.title, description: playlist.description },
+          status: { privacyStatus: 'private' }
+        })
+      });
+      const createData = await createRes.json();
+      if (!createData.id) throw new Error('플레이리스트 생성 실패');
+      const playlistId = createData.id;
+
+      // 2. 각 곡 검색 후 추가
+      let added = 0;
+      for (const t of playlist.tracks) {
+        const searchRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(t.title + ' ' + t.artist)}&type=video&maxResults=1`,
+          { headers: { Authorization: `Bearer ${ytToken}` } }
+        );
+        const searchData = await searchRes.json();
+        const videoId = searchData.items?.[0]?.id?.videoId;
+        if (videoId) {
+          await fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${ytToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              snippet: {
+                playlistId,
+                resourceId: { kind: 'youtube#video', videoId }
+              }
+            })
+          });
+          added++;
+        }
+      }
+      setYtSaveMsg(`✓ YouTube에 저장됐어요! (${added}곡)`);
+    } catch (e) {
+      setYtSaveMsg('저장 실패. 다시 시도해주세요.');
+    }
+    setYtSaving(false);
   };
 
   const G = {
@@ -464,32 +666,35 @@ export default function App() {
             <p style={{ fontSize: '11px', color: G.faint, marginBottom: '8px' }}>✎ 제목을 수정할 수 있어요</p>
             <p style={{ color: G.dim, fontSize: '13px', marginBottom: '28px', lineHeight: 1.7 }}>{playlist.description}</p>
 
-            {spToken ? (
-              <div style={{ marginBottom: '24px' }}>
-                <button className="btn-gold" onClick={saveToSpotify} disabled={saving} style={{
-                  background: saving ? 'rgba(30,215,96,0.1)' : G.sp,
-                  border: 'none', borderRadius: '30px', padding: '12px 24px',
-                  color: saving ? G.sp : '#000', fontSize: '13px',
-                  fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  transition: 'all 0.25s',
-                }}>
-                  {saving
-                    ? <><span style={{ width: '13px', height: '13px', border: '2px solid rgba(30,215,96,0.3)', borderTopColor: G.sp, borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />Spotify에 저장 중...</>
-                    : '🎵 Spotify에 저장하기'}
-                </button>
-                {saveMsg && <p style={{ fontSize: '13px', color: saveMsg.includes('✓') ? G.sp : '#c47a78', marginTop: '8px' }}>{saveMsg}</p>}
-              </div>
-            ) : (
-              <div style={{ marginBottom: '24px', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(30,215,96,0.2)', background: 'rgba(30,215,96,0.04)' }}>
-                <p style={{ fontSize: '13px', color: G.dim, marginBottom: '10px' }}>Spotify에 연결하면 플레이리스트를 자동 저장할 수 있어요!</p>
-                <button onClick={loginSpotify} style={{
-                  background: G.sp, border: 'none', borderRadius: '20px',
-                  padding: '8px 18px', color: '#000', fontSize: '12px',
-                  fontWeight: 600, cursor: 'pointer',
-                }}>Spotify 연결</button>
-              </div>
-            )}
+            {/* YouTube Music 저장 버튼 */}
+            <div style={{ marginBottom: '24px' }}>
+              {ytToken ? (
+                <div>
+                  <button className="btn-gold" onClick={saveToYouTube} disabled={ytSaving} style={{
+                    background: ytSaving ? 'rgba(255,68,68,0.1)' : '#ff0000',
+                    border: 'none', borderRadius: '30px', padding: '12px 24px',
+                    color: ytSaving ? '#ff4444' : '#fff', fontSize: '13px',
+                    fontWeight: 600, cursor: ytSaving ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    transition: 'all 0.25s',
+                  }}>
+                    {ytSaving
+                      ? <><span style={{ width: '13px', height: '13px', border: '2px solid rgba(255,68,68,0.3)', borderTopColor: '#ff4444', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />YouTube에 저장 중...</>
+                      : '▶ YouTube Music에 저장하기'}
+                  </button>
+                  {ytSaveMsg && <p style={{ fontSize: '13px', color: ytSaveMsg.includes('✓') ? '#1ed760' : '#c47a78', marginTop: '8px' }}>{ytSaveMsg}</p>}
+                </div>
+              ) : (
+                <div style={{ padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(255,68,68,0.2)', background: 'rgba(255,68,68,0.04)' }}>
+                  <p style={{ fontSize: '13px', color: G.dim, marginBottom: '10px' }}>Google 계정 연결하면 YouTube 플레이리스트에 자동 저장돼요!</p>
+                  <button onClick={loginYouTube} style={{
+                    background: '#ff0000', border: 'none', borderRadius: '20px',
+                    padding: '8px 18px', color: '#fff', fontSize: '12px',
+                    fontWeight: 600, cursor: 'pointer',
+                  }}>▶ Google 계정 연결</button>
+                </div>
+              )}
+            </div>
 
             {playlist.tracks?.map((t, i) => (
               <div key={i} className="track" style={{
@@ -580,15 +785,16 @@ export default function App() {
               {profileSaved && <span style={{ fontSize: '13px', color: G.gold }}>{profileSaved}</span>}
             </div>
 
-            <div style={{ marginTop: '32px', padding: '18px', borderRadius: '12px', border: '1px solid rgba(196,164,120,0.1)', background: 'rgba(196,164,120,0.03)' }}>
-              <p style={{ fontSize: '11px', letterSpacing: '0.15em', color: G.muted, marginBottom: '12px' }}>SPOTIFY</p>
-              {spToken && spUser ? (
+            {/* YouTube 연결 */}
+            <div style={{ marginTop: '32px', padding: '18px', borderRadius: '12px', border: '1px solid rgba(255,68,68,0.15)', background: 'rgba(255,68,68,0.03)' }}>
+              <p style={{ fontSize: '11px', letterSpacing: '0.15em', color: G.muted, marginBottom: '12px' }}>YOUTUBE MUSIC</p>
+              {ytToken ? (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: G.sp, display: 'inline-block' }} />
-                    <span style={{ fontSize: '13px', color: G.sp }}>{spUser.display_name || spUser.id} 연결됨</span>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff0000', display: 'inline-block' }} />
+                    <span style={{ fontSize: '13px', color: '#ff0000' }}>Google 계정 연결됨</span>
                   </div>
-                  <button onClick={logoutSpotify} style={{
+                  <button onClick={logoutYouTube} style={{
                     background: 'none', border: '1px solid rgba(196,164,120,0.2)',
                     borderRadius: '20px', padding: '7px 16px',
                     color: G.dim, fontSize: '12px', cursor: 'pointer',
@@ -597,13 +803,13 @@ export default function App() {
               ) : (
                 <div>
                   <p style={{ fontSize: '13px', color: G.dim, marginBottom: '12px', lineHeight: 1.7 }}>
-                    연결하면 플레이리스트가 내 Spotify에 자동 저장돼요.
+                    연결하면 플레이리스트가 내 YouTube Music에 자동 저장돼요.
                   </p>
-                  <button onClick={loginSpotify} style={{
-                    background: G.sp, border: 'none', borderRadius: '25px',
-                    padding: '10px 22px', color: '#000', fontSize: '13px',
+                  <button onClick={loginYouTube} style={{
+                    background: '#ff0000', border: 'none', borderRadius: '25px',
+                    padding: '10px 22px', color: '#fff', fontSize: '13px',
                     fontWeight: 600, cursor: 'pointer',
-                  }}>🎵 Spotify 연결하기</button>
+                  }}>▶ Google 연결하기</button>
                 </div>
               )}
             </div>
