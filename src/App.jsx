@@ -539,19 +539,32 @@ export default function App() {
               지금 이 순간의 컨디션을 말해주세요.<br />당신만을 위한 플레이리스트를 만들어드릴게요.
             </p>
 
-            <div className="fu2" style={{ marginBottom: '32px' }}>
+            <div className="fu2" style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               {spToken && spUser ? (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '30px', border: '1px solid rgba(30,215,96,0.3)', background: 'rgba(30,215,96,0.06)' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: G.sp, display: 'inline-block' }} />
-                  <span style={{ fontSize: '13px', color: G.sp }}>{spUser.display_name || spUser.id} 연결됨</span>
-                  <button onClick={logoutSpotify} style={{ background: 'none', border: 'none', color: G.dim, fontSize: '11px', cursor: 'pointer' }}>연결 해제</button>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '8px 16px', borderRadius: '30px', border: '1px solid rgba(30,215,96,0.3)', background: 'rgba(30,215,96,0.06)' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: G.sp, display: 'inline-block' }} />
+                  <span style={{ fontSize: '12px', color: G.sp }}>{spUser.display_name || spUser.id} (Spotify)</span>
+                  <button onClick={logoutSpotify} style={{ background: 'none', border: 'none', color: G.dim, fontSize: '11px', cursor: 'pointer' }}>해제</button>
                 </div>
               ) : (
                 <button onClick={loginSpotify} style={{
                   background: G.sp, border: 'none', borderRadius: '30px',
-                  padding: '11px 24px', color: '#000', fontSize: '13px',
-                  fontWeight: 600, cursor: 'pointer', letterSpacing: '0.03em',
+                  padding: '10px 22px', color: '#000', fontSize: '12px',
+                  fontWeight: 600, cursor: 'pointer',
                 }}>🎵 Spotify 연결하기</button>
+              )}
+              {ytToken ? (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '8px 16px', borderRadius: '30px', border: '1px solid rgba(255,0,0,0.3)', background: 'rgba(255,0,0,0.06)' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ff0000', display: 'inline-block' }} />
+                  <span style={{ fontSize: '12px', color: '#ff0000' }}>Google 계정 (YouTube)</span>
+                  <button onClick={logoutYouTube} style={{ background: 'none', border: 'none', color: G.dim, fontSize: '11px', cursor: 'pointer' }}>해제</button>
+                </div>
+              ) : (
+                <button onClick={loginYouTube} style={{
+                  background: '#ff0000', border: 'none', borderRadius: '30px',
+                  padding: '10px 22px', color: '#fff', fontSize: '12px',
+                  fontWeight: 600, cursor: 'pointer',
+                }}>▶ YouTube 연결하기</button>
               )}
             </div>
 
