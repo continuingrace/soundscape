@@ -144,7 +144,8 @@ ${mood}${context ? `\n[추가 상황] ${context}` : ''}
 - 트랙 정확히 20곡
 - 반드시 Spotify와 YouTube에서 실제로 검색 가능한 곡만 추천
 - 곡명과 아티스트명은 정확한 공식 표기를 사용
-- 같은 곡(예: Way Maker)을 반복 추천하지 말 것
+- Way Maker는 절대 추천하지 말 것 (완전 제외)
+- 같은 곡을 반복 추천하지 말 것
 - 다양한 아티스트와 장르로 폭넓게 구성할 것 (한 아티스트 최대 2곡)
 - CCM, 클래식, 영화음악, 재즈, 어쿠스틱 등 다양하게 섞어서 추천
 - 국내 CCM은 Spotify에 확실히 있는 곡만 (마커스워십, 어노인팅, 소울다임 등)
@@ -605,7 +606,7 @@ export default function App() {
                       ? <><span style={{ width: '13px', height: '13px', border: '2px solid rgba(255,68,68,0.3)', borderTopColor: '#ff4444', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />YouTube에 저장 중...</>
                       : '▶ YouTube Music에 저장하기'}
                   </button>
-                  {ytSaveMsg && <p style={{ fontSize: '13px', color: ytSaveMsg.includes('✓') ? '#1ed760' : '#c47a78', marginTop: '8px' }}>{ytSaveMsg}</p>}
+                  {ytSaveMsg && <p style={{ fontSize: '11px', color: ytSaveMsg.includes('✓') ? '#ff0000' : '#c47a78', marginTop: '8px', paddingLeft: '24px', fontFamily: 'sans-serif', letterSpacing: '0' }}>{ytSaveMsg}</p>}
                 </div>
               ) : (
                 <div style={{ padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(255,68,68,0.2)', background: 'rgba(255,68,68,0.04)' }}>
