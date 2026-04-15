@@ -141,7 +141,7 @@ ${mood}${context ? `\n[추가 상황] ${context}` : ''}
 {"title":"플레이리스트 제목 (감성적인 한국어)","description":"한 줄 설명","tracks":[{"title":"곡명","artist":"아티스트명","reason":"이 곡을 고른 이유 한 문장"}]}
 
 규칙:
-- 트랙 정확히 20곡
+- 트랙 정확히 10곡
 - 반드시 Spotify와 YouTube에서 실제로 검색 가능한 곡만 추천
 - 곡명과 아티스트명은 정확한 공식 표기를 사용
 - Way Maker는 절대 추천하지 말 것 (완전 제외)
@@ -158,7 +158,7 @@ ${mood}${context ? `\n[추가 상황] ${context}` : ''}
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2500,
+      max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
