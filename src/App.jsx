@@ -594,18 +594,42 @@ export default function App() {
             <div style={{ marginBottom: '24px' }}>
               {ytToken ? (
                 <div>
-                  <button className="btn-gold" onClick={saveToYouTube} disabled={ytSaving} style={{
-                    background: ytSaving ? 'rgba(255,68,68,0.1)' : '#ff0000',
-                    border: 'none', borderRadius: '30px', padding: '12px 24px',
-                    color: ytSaving ? '#ff4444' : '#fff', fontSize: '13px',
-                    fontWeight: 600, cursor: ytSaving ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    transition: 'all 0.25s',
-                  }}>
-                    {ytSaving
-                      ? <><span style={{ width: '13px', height: '13px', border: '2px solid rgba(255,68,68,0.3)', borderTopColor: '#ff4444', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />YouTube에 저장 중...</>
-                      : '▶ YouTube Music에 저장하기'}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button className="btn-gold" onClick={saveToYouTube} disabled={ytSaving} style={{
+                      background: ytSaving ? 'rgba(255,68,68,0.1)' : '#ff0000',
+                      border: 'none', borderRadius: '30px', padding: '12px 24px',
+                      color: ytSaving ? '#ff4444' : '#fff', fontSize: '13px',
+                      fontWeight: 600, cursor: ytSaving ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      transition: 'all 0.25s',
+                    }}>
+                      {ytSaving
+                        ? <><span style={{ width: '13px', height: '13px', border: '2px solid rgba(255,68,68,0.3)', borderTopColor: '#ff4444', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />YouTube에 저장 중...</>
+                        : '▶ YouTube Music에 저장하기'}
+                    </button>
+                    <a href="https://music.youtube.com" target="_blank" rel="noopener noreferrer" title="YouTube Music" style={{
+                      width: '34px', height: '34px', borderRadius: '50%',
+                      border: '1px solid rgba(255,68,68,0.5)',
+                      background: 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      textDecoration: 'none', color: '#ff4444', fontSize: '13px',
+                      flexShrink: 0, transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,68,68,0.12)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >♪</a>
+                    <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" title="YouTube" style={{
+                      width: '34px', height: '34px', borderRadius: '50%',
+                      border: '1px solid rgba(255,68,68,0.5)',
+                      background: 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      textDecoration: 'none', color: '#ff4444', fontSize: '13px',
+                      flexShrink: 0, transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,68,68,0.12)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >▶</a>
+                  </div>
                   {ytSaveMsg && <p style={{ fontSize: '11px', color: ytSaveMsg.includes('✓') ? '#ff0000' : '#c47a78', marginTop: '8px', paddingLeft: '24px', fontFamily: 'sans-serif', letterSpacing: '0' }}>{ytSaveMsg}</p>}
                 </div>
               ) : (
